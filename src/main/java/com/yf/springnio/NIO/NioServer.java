@@ -53,7 +53,13 @@ public class NioServer {
                 }
                 //可读事件
                 if (selectionKey.isReadable()) {
-                    readHandler(selectionKey, selector);
+                    try {
+                        readHandler(selectionKey, selector);
+                    }catch (IOException e){ //处理当客户端异常关闭 服务器任然保持read连接，导致远程主机强迫关闭了一个现有的连接。
+                        serverSocketChannel.socket().close();
+                        serverSocketChannel.close();
+                        selectionKey.cancel();
+                    }
                 }
                 //.....
             }
